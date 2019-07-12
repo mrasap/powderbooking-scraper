@@ -1,2 +1,2 @@
 # powderbooking-scraper
-Pythons craper for the Powderbooking application 
+Python scraper for the Powderbooking application 
