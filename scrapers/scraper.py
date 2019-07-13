@@ -15,8 +15,8 @@
 import queue
 import requests
 
-from app.config import *
-from app.error_handler import ErrorHandler
+from config import *
+from utils.error_handler import ErrorHandler
 
 
 class Scraper:
