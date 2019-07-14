@@ -28,7 +28,7 @@
 import os
 
 
-# The delay between two API calls (in seconds)
+# The _delay between two API calls (in seconds)
 DELAY_MIN = 0.4
 DELAY_MAX = 1.0
 
@@ -43,15 +43,40 @@ ITER_MAX = 5
 CONSECUTIVE_ERRORS_MAX = 20
 
 
+def build_weatherunlocked_base_url(localweathertype: str = 'forecast') -> str:
+    """
+    Build the base url for a weatherunlocked current_request.
+    Credentials are built from environmental variables.
+
+    :param localweathertype: 'forecast' or 'current'
+    :return: base url string that needs lat and lng params inserted
+    """
+    app_id = os.environ.get('WEATHERUNLOCKED_APP_ID')
+    app_key = os.environ.get('WEATHERUNLOCKED_APP_KEY')
+    return f'http://api.weatherunlocked.com/api/{localweathertype}/{{lat}},{{lng}}?app_id={app_id}&app_key={app_key}'
+
+
+def build_openweathermap_base_url() -> str:
+    """
+    Build the base url for an openweathermap current_request.
+    Credentials are built from environmental variables.
+
+    :return: base url string that needs lat and lng params inserted
+    """
+    app_id = os.environ.get('OPENWEATHERMAP_APP_ID')
+    return f'https://api.openweathermap.org/data/2.5/weather?lat={{lat}}&lon={{lng}}&appid={app_id}&units=metric'
+
+
 def build_database_url() -> str:
     """
-    Retrieve the environmental variables to build the database url
+    Build the database url.
+    Credentials are built from environmental variables.
 
     :return: the database url
     """
     username = os.environ.get('POSTGRES_USERNAME', 'postgres')
     password = os.environ.get('POSTGRES_PASSWORD', 'password')
-    host = os.environ.get('POSTGRES_HOST', 'db')
-    port = os.environ.get('POSTGRES_PORT', '5432')
+    host = os.environ.get('POSTGRES_HOST', 'localhost')
+    port = os.environ.get('POSTGRES_PORT', '8001')
     database = os.environ.get('POSTGRES_DB', 'powderbooking')
     return f'postgresql://{username}:{password}@{host}:{port}/{database}'

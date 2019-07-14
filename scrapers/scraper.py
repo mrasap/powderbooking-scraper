@@ -12,63 +12,111 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import queue
+from abc import ABC, abstractmethod
+
 import time
 from random import randint
+from typing import Dict, List
 
 import requests
+from sqlalchemy.engine import ResultProxy
+from sqlalchemy.exc import DatabaseError
 
 from config import *
-from utils.error_handler import ErrorHandler
+from database.database import DatabaseHandler
+from scrapers.errorHandler import ErrorHandler
 
 
-class Scraper:
-    q: queue
-    error_handler: ErrorHandler
+class Scraper(ErrorHandler, ABC):
+    """
+    This class is used as a base for all other scrapers.
+    It is an abstract class, as it requires the values for each specific api to function.
 
-    def __init__(self):
-        self.q = queue.Queue()
-        self.error_handler = ErrorHandler()
+    The process can be described as follows:
+    1 - Retrieve the records that need to be scraped
+    2 - For each record, request the data and parse the results
+    3 - Insert that data into the database in batches
+    """
+    db: DatabaseHandler
+    results: List[Dict[str]]
 
-    def delay(self):
-        """ Randomize the delay between rows to avoid throttling / DNSing google """
+    current_id: int  # the current id that we are handling
+
+    def __init__(self, db: DatabaseHandler = None):
+        super().__init__()
+        if db is None:
+            self.db = DatabaseHandler()
+        else:
+            self.db = db
+        self.results = []
+
+    @staticmethod
+    def _delay() -> None:
+        """
+        Add a randomized delay between requests to avoid throttling / DNSing google.
+        """
         time.sleep(randint(DELAY_MIN * 10, DELAY_MAX * 10) / 10)
 
-    def request_weather_apis(self, sql_insert, sql_select, url_base, url_args, req_handler_func):
-        """ Core logic of requesting the API """
-        """ 1 - Walk through all records (sql_select )"""
-        """ 2 - Retrieve data (url_base and url_args)"""
-        """ 3 - Handle the request (req_handler_func)"""
-        """ 4 - Insert data into the database (sql_select)"""
-        print('Amount of requests to be handled:', amount_db(sql_select))
+    @property
+    @abstractmethod
+    def _url_base(self) -> str:
+        """
+        The base url of the api that we are scraping.
+        """
+        pass
 
-        for i, (_id, lat, lng) in enumerate(select_db(sql_select), start=0):
-            # print(i, ": ", _id, lat, lng)
-            url_args['lat'] = lat
-            url_args['lng'] = lng
+    @property
+    @abstractmethod
+    def _table_to_insert_into(self) -> str:
+        """
+        The table that we are inserting into.
+        """
+        pass
 
-            req = requests.get(url_base.format(**url_args), headers={'Accept': 'application/json'})
+    @property
+    @abstractmethod
+    def _select_from_database(self) -> ResultProxy:
+        pass
 
-            # Stop if throttled, skip this record if there is an error in the current request
-            if self.error_handler(req):
-                if self.error_handler.is_throttled():
+    @abstractmethod
+    def _parse_request(self) -> None:
+        """
+        Parse the request and add the outcome to the results so it is inserted into the database.
+        """
+        pass
+
+    def _insert_into_database(self) -> None:
+        if len(self.results) > 0:
+            try:
+                self.db.insert(table=self._table_to_insert_into, values=self.results)
+            except DatabaseError:
+                self.handle_database_error()
+
+            self.results = []
+
+    def scrape(self) -> None:
+        """
+        Scrape the data from the weather apis and add it to the database.
+        """
+        for self.current_id, lat, lng in self._select_from_database:
+            self.current_request = requests.get(url=self._url_base.format(lat=lat, lng=lng),
+                                                headers={'Accept': 'application/json'})
+
+            # these are measures to avoid and handle throttling by the api that we are scraping
+            if self.check_request_error():
+                if self.is_throttled():
                     break
                 else:
                     continue
-            # Delay the script to avoid bombarding the API with too many requests
-            self.delay()
+            self._delay()
 
-            req = req.json()
-
-            # The specific handling of the request is performed by the injected function
-            req_handler_func(q, req, _id)
+            self._parse_request()
 
             # insert into the database in a blockwise manner
             # to avoid opening the database for every single new record
-            if self.q.qsize() >= QUEUE_MAX:
-                insert_db(sql_insert, self.error_handler, q)
+            if len(self.results) >= QUEUE_MAX:
+                self._insert_into_database()
 
         # insert the remaining items into the database
-        insert_db(sql_insert, self.error_handler, q)
-        print(self.error_handler.result())
-
+        self._insert_into_database()
+        print(self.result())

@@ -25,4 +25,4 @@ RUN adduser -D dummyuser && \
 WORKDIR app
 USER dummyuser
 
-CMD ["python3", "app.py"]
+CMD ["python3", "app.py", "--api", "forecast"]

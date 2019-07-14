@@ -12,11 +12,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import plac
+
+from scrapers.forecastScraper import ForecastScraper
+from scrapers.weatherScraper import WeatherScraper
+
+
+def main(api: 'The API to scrape, can be forecast or weather'):
+    """
+    Scrape either the weather or forecast API and insert the results into the database.
+    """
+    if api == 'forecast':
+        ForecastScraper().scrape()
+    elif api == 'weather':
+        WeatherScraper().scrape()
+    else:
+        print('Invalid input for api, aborting..')
+        exit(1)
+
+
 if __name__ == '__main__':
-    print('Connecting to db..')
-
-    from database.database import build_postgres_database
-
-    engine, metadata = build_postgres_database()
-
-    print('Successfully connected to db')
+    plac.call(main)
