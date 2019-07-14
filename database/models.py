@@ -12,29 +12,66 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey
-from sqlalchemy.engine import Engine
-
-from config import generate_database_url
+from sqlalchemy import Table, Column, Integer, Float, Date, DateTime, String, Sequence, MetaData, \
+    ForeignKey, UniqueConstraint
 
 
-def build_postgres_engine() -> Engine:
-    return create_engine(generate_database_url())
+def model_resort(metadata: MetaData) -> Table:
+    return Table('resort', metadata,
+                 Column('id', Integer, Sequence('resort_id_seq'), primary_key=True),
+                 Column('continent', String),
+                 Column('name', String),
+                 Column('fullname', String),
+                 Column('continent', String),
+                 Column('country', String),
+                 Column('village', String),
+                 Column('lat', Float),
+                 Column('lng', Float),
+                 Column('altitude_min_m', Integer),
+                 Column('altitude_max_m', Integer),
+                 Column('lifts', Integer),
+                 Column('slopes_total_km', Integer),
+                 Column('slopes_blue_km', Integer),
+                 Column('slopes_red_km', Integer),
+                 Column('slopes_black_km', Integer),
+                 UniqueConstraint('village', 'country'),
+                 )
 
 
-def setup_postgres_database(engine: Engine = build_postgres_engine()) -> None:
-    metadata = MetaData()
+def model_weather(metadata: MetaData) -> Table:
+    return Table('weather', metadata,
+                 Column('id', Integer, Sequence('weather_id_seq'), primary_key=True),
+                 Column('resort_id', Integer, ForeignKey('resort.id', onupdate="CASCADE", ondelete="CASCADE")),
+                 Column('date_request', DateTime),
+                 Column('dt', DateTime),  # straight from api
+                 Column('date', Date),  # derived from dt
+                 Column('timepoint', Integer, default=-1),  # ordinal, categorized every 3 hour (range 0-7)
+                 Column('temperature_c', Float),
+                 Column('wind_speed_kmh', Float),
+                 Column('wind_direction_deg', Float),
+                 Column('visibility_km', Float),
+                 Column('clouds_pct', Float),
+                 Column('snow_3h_mm', Float),
+                 Column('rain_3h_mm', Float),
+                 UniqueConstraint('date', 'timepoint', 'resort_id'),
+                 )
 
-    Table('users', metadata,
-          Column('id', Integer, primary_key=True),
-          Column('name', String),
-          Column('fullname', String),
-          )
 
-    Table('addresses', metadata,
-          Column('id', Integer, primary_key=True),
-          Column('user_id', None, ForeignKey('users.id')),
-          Column('email_address', String, nullable=False)
-          )
-
-    metadata.create_all(engine)
+def model_forecast(metadata: MetaData) -> Table:
+    return Table('forecast', metadata,
+                 Column('id', Integer, Sequence('forecast_id_seq'), primary_key=True),
+                 Column('resort_id', Integer, ForeignKey('resort.id', onupdate="CASCADE", ondelete="CASCADE")),
+                 Column('date_request', DateTime),
+                 Column('date', Date),
+                 Column('timepoint', Integer),  # straight from api
+                 Column('temperature_max_c', Float),
+                 Column('temperature_min_c', Float),
+                 Column('rain_total_mm', Float),
+                 Column('rain_week_mm', Float),
+                 Column('snow_total_mm', Float),
+                 Column('snow_week_mm', Float),
+                 Column('prob_precip_pct', Float),
+                 Column('wind_speed_max_kmh', Float),
+                 Column('windgst_max_kmh', Float),
+                 UniqueConstraint('date', 'timepoint', 'resort_id'),
+                 )

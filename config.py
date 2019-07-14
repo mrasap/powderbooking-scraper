@@ -43,9 +43,9 @@ ITER_MAX = 5
 CONSECUTIVE_ERRORS_MAX = 20
 
 
-def generate_database_url() -> str:
+def build_database_url() -> str:
     """
-    Retrieve the environmental variables to generate the database url
+    Retrieve the environmental variables to build the database url
 
     :return: the database url
     """

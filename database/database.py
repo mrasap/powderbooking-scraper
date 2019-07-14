@@ -12,11 +12,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-if __name__ == '__main__':
-    print('Connecting to db..')
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.engine import Engine
 
-    from database.database import build_postgres_database
+from config import build_database_url
+from database.models import model_resort, model_weather, model_forecast
 
-    engine, metadata = build_postgres_database()
 
-    print('Successfully connected to db')
+def _build_postgres_engine(database_url: str = build_database_url()) -> Engine:
+    return create_engine(database_url)
+
+
+def build_postgres_database(engine=_build_postgres_engine()) -> (Engine, MetaData):
+    metadata = MetaData()
+
+    model_resort(metadata)
+    model_weather(metadata)
+    model_forecast(metadata)
+
+    metadata.create_all(engine)
+
+    return engine, metadata

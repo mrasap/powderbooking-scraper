@@ -13,6 +13,9 @@
 #  limitations under the License.
 #
 import queue
+import time
+from random import randint
+
 import requests
 
 from config import *
@@ -26,6 +29,10 @@ class Scraper:
     def __init__(self):
         self.q = queue.Queue()
         self.error_handler = ErrorHandler()
+
+    def delay(self):
+        """ Randomize the delay between rows to avoid throttling / DNSing google """
+        time.sleep(randint(DELAY_MIN * 10, DELAY_MAX * 10) / 10)
 
     def request_weather_apis(self, sql_insert, sql_select, url_base, url_args, req_handler_func):
         """ Core logic of requesting the API """
@@ -49,7 +56,7 @@ class Scraper:
                 else:
                     continue
             # Delay the script to avoid bombarding the API with too many requests
-            delay()
+            self.delay()
 
             req = req.json()
 
