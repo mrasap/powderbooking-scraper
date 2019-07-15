@@ -6,3 +6,4 @@ psycopg2-binary==2.8.2
 requests==2.22.0
 SQLAlchemy==1.3.5
 urllib3==1.25.3
+powderbooking==0.3

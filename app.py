@@ -14,6 +14,8 @@
 #
 import plac
 
+from config import build_database_url
+from powderbooking.database import DatabaseHandler
 from scrapers.forecastScraper import ForecastScraper
 from scrapers.weatherScraper import WeatherScraper
 
@@ -22,11 +24,13 @@ def main(api: 'The API to scrape, can be forecast or weather'):
     """
     Scrape either the weather or forecast API and insert the results into the database.
     """
+    print('Creating database Handler')
+    db = DatabaseHandler(database_url=build_database_url())
     print('Initiating scraping session for api', api)
     if api == 'forecast':
-        ForecastScraper().scrape()
+        ForecastScraper(db=db).scrape()
     elif api == 'weather':
-        WeatherScraper().scrape()
+        WeatherScraper(db=db).scrape()
     else:
         print('Invalid input for api, aborting..')
         exit(1)

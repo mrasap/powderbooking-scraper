@@ -16,7 +16,7 @@ from datetime import datetime
 from sqlalchemy.engine import ResultProxy
 
 from config import build_weatherunlocked_base_url
-from database.query import Query
+from powderbooking.query import Query
 from scrapers.scraper import Scraper
 
 

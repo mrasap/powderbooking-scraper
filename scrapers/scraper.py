@@ -23,7 +23,7 @@ from sqlalchemy.engine import ResultProxy
 from sqlalchemy.exc import DatabaseError
 
 from config import *
-from database.database import DatabaseHandler
+from powderbooking.database import DatabaseHandler
 from scrapers.errorHandler import ErrorHandler
 
 
@@ -42,12 +42,9 @@ class Scraper(ErrorHandler, ABC):
 
     current_id: int  # the current id that we are handling
 
-    def __init__(self, db: DatabaseHandler = None):
+    def __init__(self, db: DatabaseHandler):
         super().__init__()
-        if db is None:
-            self.db = DatabaseHandler()
-        else:
-            self.db = db
+        self.db = db
         self.results = []
 
     @staticmethod
