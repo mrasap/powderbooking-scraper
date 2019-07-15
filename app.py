@@ -22,6 +22,7 @@ def main(api: 'The API to scrape, can be forecast or weather'):
     """
     Scrape either the weather or forecast API and insert the results into the database.
     """
+    print('Initiating scraping session for api', api)
     if api == 'forecast':
         ForecastScraper().scrape()
     elif api == 'weather':

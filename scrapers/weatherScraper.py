@@ -18,7 +18,7 @@ from math import floor
 from sqlalchemy.engine import ResultProxy
 
 from config import build_openweathermap_base_url
-from database.queries import Queries
+from database.query import Query
 from scrapers.scraper import Scraper
 
 
@@ -34,23 +34,25 @@ class WeatherScraper(Scraper):
     @property
     def _select_from_database(self) -> ResultProxy:
         # TODO: use a generator with fetchmany instead of fetchall to reduce memory load
-        return self.db.execute(Queries.select_weather_3h).fetchall()
+        return self.db.execute_query(Query.select_weather_3h).fetchall()
 
     def _parse_request(self) -> None:
         req = self.current_request.json()
 
         dt = datetime.fromtimestamp(req['dt']) if 'dt' in req else datetime.now()
 
-        self.result += {'date_request': datetime.now(),
-                        'dt': dt,
-                        'date': dt.date(),
-                        'timepoint': floor(dt.hour / 3) if 'dt' in req else -1,
-                        'temperature_c': req['main']['temp'] if 'main' in req and 'temp' in req['main'] else None,
-                        'wind_speed_kmh': req['wind']['speed'] if 'wind' in req and 'speed' in req['wind'] else None,
-                        'wind_direction_deg': req['wind']['deg'] if 'wind' in req and 'deg' in req['wind'] else None,
-                        'visibility_km': req['visibility'] if 'visibility' in req else None,
-                        'clouds_pct': req['clouds']['all'] if 'clouds' in req and 'all' in req['clouds'] else None,
-                        'snow_3h_mm': req['snow']['3h'] if 'snow' in req and '3h' in req['rain'] else None,
-                        'rain_3h_mm': req['rain']['3h'] if 'rain' in req and '3h' in req['rain'] else None,
-                        'resort_id': self.current_id
-                        }
+        record = {'date_request': datetime.now(),
+                  'dt': dt,
+                  'date': dt.date(),
+                  'timepoint': floor(dt.hour / 3) if 'dt' in req else -1,
+                  'temperature_c': req['main']['temp'] if 'main' in req and 'temp' in req['main'] else None,
+                  'wind_speed_kmh': req['wind']['speed'] if 'wind' in req and 'speed' in req['wind'] else None,
+                  'wind_direction_deg': req['wind']['deg'] if 'wind' in req and 'deg' in req['wind'] else None,
+                  'visibility_km': req['visibility'] if 'visibility' in req else None,
+                  'clouds_pct': req['clouds']['all'] if 'clouds' in req and 'all' in req['clouds'] else None,
+                  'snow_3h_mm': req['snow']['3h'] if 'snow' in req and '3h' in req['rain'] else None,
+                  'rain_3h_mm': req['rain']['3h'] if 'rain' in req and '3h' in req['rain'] else None,
+                  'resort_id': self.current_id
+                  }
+
+        self.results.append(record)

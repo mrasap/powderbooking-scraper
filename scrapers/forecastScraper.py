@@ -16,7 +16,7 @@ from datetime import datetime
 from sqlalchemy.engine import ResultProxy
 
 from config import build_weatherunlocked_base_url
-from database.queries import Queries
+from database.query import Query
 from scrapers.scraper import Scraper
 
 
@@ -32,7 +32,7 @@ class ForecastScraper(Scraper):
     @property
     def _select_from_database(self) -> ResultProxy:
         # TODO: use a generator with fetchmany instead of fetchall to reduce memory load
-        return self.db.execute(Queries.select_forecast_24h).fetchall()
+        return self.db.execute_query(Query.select_forecast_24h).fetchall()
 
     def _parse_request(self) -> None:
         req = self.current_request.json()
@@ -47,17 +47,19 @@ class ForecastScraper(Scraper):
         for day_number, day in enumerate(req['Days'], start=0):
             date_weatherunlocked = datetime.strptime(day['date'], "%d/%m/%Y")
 
-            self.result += {'date_request': datetime.now(),
-                            'date': date_weatherunlocked,
-                            'timepoint': day_number,
-                            'temperature_max_c': day['temp_max_c'],
-                            'temperature_min_c': day['temp_min_c'],
-                            'rain_total_mm': day['rain_total_mm'],
-                            'rain_week_mm': rain_week,
-                            'snow_total_mm': day['snow_total_mm'],
-                            'snow_week_mm': snow_week,
-                            'prob_precip_pct': day['prob_precip_pct'],
-                            'wind_speed_max_kmh': day['windspd_max_kmh'],
-                            'windgst_max_kmh': day['windgst_max_kmh'],
-                            'resort_id': self.current_id
-                            }
+            record = {'date_request': datetime.now(),
+                             'date': date_weatherunlocked,
+                             'timepoint': day_number,
+                             'temperature_max_c': day['temp_max_c'],
+                             'temperature_min_c': day['temp_min_c'],
+                             'rain_total_mm': day['rain_total_mm'],
+                             'rain_week_mm': rain_week,
+                             'snow_total_mm': day['snow_total_mm'],
+                             'snow_week_mm': snow_week,
+                             'prob_precip_pct': day['prob_precip_pct'],
+                             'wind_speed_max_kmh': day['windspd_max_kmh'],
+                             'windgst_max_kmh': day['windgst_max_kmh'],
+                             'resort_id': self.current_id,
+                             }
+
+            self.results.append(record)

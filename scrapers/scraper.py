@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 
 import time
 from random import randint
-from typing import Dict, List
+from typing import List
 
 import requests
 from sqlalchemy.engine import ResultProxy
@@ -38,7 +38,7 @@ class Scraper(ErrorHandler, ABC):
     3 - Insert that data into the database in batches
     """
     db: DatabaseHandler
-    results: List[Dict[str]]
+    results: List[dict]
 
     current_id: int  # the current id that we are handling
 

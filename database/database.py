@@ -13,13 +13,14 @@
 #  limitations under the License.
 #
 from contextlib import contextmanager
-from typing import List, Dict
+from typing import List
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.engine import Engine, Connection, ResultProxy
 
 from config import build_database_url
 from database.models import model_resort, model_weather, model_forecast
+from database.query import Query
 
 
 def build_postgres_engine(database_url: str = build_database_url()) -> Engine:
@@ -66,7 +67,18 @@ class DatabaseHandler:
         with self.connect() as conn:
             return conn.execute(*args, **kwargs)
 
-    def insert(self, table: str, values: List[Dict[str]]) -> ResultProxy:
+    def execute_query(self, query: Query, *args, **kwargs) -> ResultProxy:
+        """
+        Execute the pre-specified query.
+
+        :param query: the Query that should be executed.
+        :param args: any other positional arguments.
+        :param kwargs: any other keyword arguments.
+        :return: the ResultProxy.
+        """
+        return self.execute(query.value, *args, **kwargs)
+
+    def insert(self, table: str, values: List[dict]) -> ResultProxy:
         """
         Insert the inserted list of values into the table that is given.
         Will raise a ValueError if the table is not inside the database.
@@ -75,6 +87,7 @@ class DatabaseHandler:
         :param values: a list of new rows that should be inserted.
         :return: the ResultProxy.
         """
-        if table not in self.metadata.tables.keys:
+        print('attempting to insert list:', values)
+        if table not in self.metadata.tables.keys():
             raise ValueError(f'{table} not in the tables of the database')
         return self.execute(self.metadata.tables[table].insert(), values)

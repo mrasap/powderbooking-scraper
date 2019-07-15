@@ -16,7 +16,7 @@
 from enum import Enum
 
 
-class Queries(Enum):
+class Query(Enum):
     """
     This Enum is used to store all the queries that are used by the application.
 
