@@ -48,18 +48,18 @@ class ForecastScraper(Scraper):
             date_weatherunlocked = datetime.strptime(day['date'], "%d/%m/%Y")
 
             record = {'date_request': datetime.now(),
-                             'date': date_weatherunlocked,
-                             'timepoint': day_number,
-                             'temperature_max_c': day['temp_max_c'],
-                             'temperature_min_c': day['temp_min_c'],
-                             'rain_total_mm': day['rain_total_mm'],
-                             'rain_week_mm': rain_week,
-                             'snow_total_mm': day['snow_total_mm'],
-                             'snow_week_mm': snow_week,
-                             'prob_precip_pct': day['prob_precip_pct'],
-                             'wind_speed_max_kmh': day['windspd_max_kmh'],
-                             'windgst_max_kmh': day['windgst_max_kmh'],
-                             'resort_id': self.current_id,
-                             }
+                      'date': date_weatherunlocked,
+                      'timepoint': day_number,
+                      'temperature_max_c': day['temp_max_c'],
+                      'temperature_min_c': day['temp_min_c'],
+                      'rain_total_mm': day['rain_total_mm'],
+                      'rain_week_mm': rain_week,
+                      'snow_total_mm': day['snow_total_mm'],
+                      'snow_week_mm': snow_week,
+                      'prob_precip_pct': day['prob_precip_pct'],
+                      'wind_speed_max_kmh': day['windspd_max_kmh'],
+                      'windgst_max_kmh': day['windgst_max_kmh'],
+                      'resort_id': self.current_id,
+                      }
 
             self.results.append(record)

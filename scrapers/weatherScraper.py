@@ -20,6 +20,7 @@ from sqlalchemy.engine import ResultProxy
 from config import build_openweathermap_base_url
 from powderbooking.query import Query
 from scrapers.scraper import Scraper
+from scrapers.utils import get_nested
 
 
 class WeatherScraper(Scraper):
@@ -45,13 +46,13 @@ class WeatherScraper(Scraper):
                   'dt': dt,
                   'date': dt.date(),
                   'timepoint': floor(dt.hour / 3) if 'dt' in req else -1,
-                  'temperature_c': req['main']['temp'] if 'main' in req and 'temp' in req['main'] else None,
-                  'wind_speed_kmh': req['wind']['speed'] if 'wind' in req and 'speed' in req['wind'] else None,
-                  'wind_direction_deg': req['wind']['deg'] if 'wind' in req and 'deg' in req['wind'] else None,
-                  'visibility_km': req['visibility'] if 'visibility' in req else None,
-                  'clouds_pct': req['clouds']['all'] if 'clouds' in req and 'all' in req['clouds'] else None,
-                  'snow_3h_mm': req['snow']['3h'] if 'snow' in req and '3h' in req['rain'] else None,
-                  'rain_3h_mm': req['rain']['3h'] if 'rain' in req and '3h' in req['rain'] else None,
+                  'temperature_c': get_nested(req, 'main.temp'),
+                  'wind_speed_kmh': get_nested(req, 'wind.speed'),
+                  'wind_direction_deg': get_nested(req, 'wind.deg'),
+                  'visibility_km': get_nested(req, 'visibility'),
+                  'clouds_pct': get_nested(req, 'clouds.all'),
+                  'snow_3h_mm': get_nested(req, 'snow.3h'),
+                  'rain_3h_mm': get_nested(req, 'rain.3h'),
                   'resort_id': self.current_id
                   }
 
