@@ -54,16 +54,16 @@ def build_openweathermap_base_url() -> str:
     return f'https://api.openweathermap.org/data/2.5/weather?lat={{lat}}&lon={{lng}}&appid={app_id}&units=metric'
 
 
-def build_database_url() -> str:
+def build_database_url(project: str = os.environ.get('PROJECT_NAME', 'powderbooking')) -> str:
     """
     Build the database url.
     Credentials are built from environmental variables.
 
     :return: the database url
     """
-    username = os.environ.get('POSTGRES_USERNAME', 'postgres')
-    password = os.environ.get('POSTGRES_PASSWORD', 'password')
-    host = os.environ.get('POSTGRES_HOST', 'localhost')
-    port = os.environ.get('POSTGRES_PORT', '8001')
-    database = os.environ.get('POSTGRES_DB', 'powderbooking')
+    username = os.environ.get('POSTGRESQL_USER', 'postgres')
+    password = os.environ.get('POSTGRESQL_PASSWORD', 'password')
+    host = os.environ.get(f'{project}_POSTGRESQL_SERVICE_HOST'.upper(), 'localhost')
+    port = os.environ.get(f'{project}_POSTGRESQL_SERVICE_PORT'.upper(), '8001')
+    database = os.environ.get('POSTGRESQL_DB', 'powderbooking')
     return f'postgresql://{username}:{password}@{host}:{port}/{database}'
