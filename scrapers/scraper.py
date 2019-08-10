@@ -38,14 +38,14 @@ class Scraper(ErrorHandler, ABC):
     3 - Insert that data into the database in batches
     """
     db: DatabaseHandler
-    results: List[dict]
+    results: List[List[dict]]
 
     current_id: int  # the current id that we are handling
 
     def __init__(self, db: DatabaseHandler):
         super().__init__()
         self.db = db
-        self.results = []
+        self._initialize_or_reset_results()
 
     @staticmethod
     def _delay() -> None:
@@ -64,7 +64,7 @@ class Scraper(ErrorHandler, ABC):
 
     @property
     @abstractmethod
-    def _table_to_insert_into(self) -> str:
+    def _table_to_insert_into(self) -> List[str]:
         """
         The table that we are inserting into.
         """
@@ -83,13 +83,21 @@ class Scraper(ErrorHandler, ABC):
         pass
 
     def _insert_into_database(self) -> None:
-        if len(self.results) > 0:
-            try:
-                self.db.insert(table=self._table_to_insert_into, values=self.results)
-            except DatabaseError:
-                self.handle_database_error()
+        for table, result in zip(self._table_to_insert_into, self.results):
+            # print(f"Inserting into {table} {len(result)} rows")
+            if len(result) > 0:
+                try:
+                    self.db.insert(table_name=table, values=result)
+                except DatabaseError:
+                    self.handle_database_error()
 
-            self.results = []
+        self._initialize_or_reset_results()
+
+    def _initialize_or_reset_results(self) -> None:
+        """
+        Initialize or reset the results to prepare for scraping a batch of results.
+        """
+        self.results = [[] for _ in self._table_to_insert_into]
 
     def scrape(self) -> None:
         """
@@ -111,7 +119,7 @@ class Scraper(ErrorHandler, ABC):
 
             # insert into the database in a blockwise manner
             # to avoid opening the database for every single new record
-            if len(self.results) >= QUEUE_MAX:
+            if len(self.results[0]) >= QUEUE_MAX:
                 self._insert_into_database()
 
         # insert the remaining items into the database

@@ -90,6 +90,7 @@ class ErrorHandler:
         """
         Handle the error that was present in the database.
         """
+        print('Error in database for current_request:', self.current_request.url)
         self.database_errors += 1
 
     def reset_error_streak(self) -> None:

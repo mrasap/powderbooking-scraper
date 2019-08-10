@@ -15,6 +15,8 @@
 from datetime import datetime
 
 from math import floor
+from typing import List
+
 from sqlalchemy.engine import ResultProxy
 
 from config import build_openweathermap_base_url
@@ -29,8 +31,8 @@ class WeatherScraper(Scraper):
         return build_openweathermap_base_url()
 
     @property
-    def _table_to_insert_into(self) -> str:
-        return 'weather'
+    def _table_to_insert_into(self) -> List[str]:
+        return ['weather']
 
     @property
     def _select_from_database(self) -> ResultProxy:
@@ -56,4 +58,4 @@ class WeatherScraper(Scraper):
                   'resort_id': self.current_id
                   }
 
-        self.results.append(record)
+        self.results[0].append(record)

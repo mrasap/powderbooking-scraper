@@ -13,6 +13,8 @@
 #  limitations under the License.
 #
 from datetime import datetime
+from typing import List
+
 from sqlalchemy.engine import ResultProxy
 
 from config import build_weatherunlocked_base_url
@@ -26,8 +28,8 @@ class ForecastScraper(Scraper):
         return build_weatherunlocked_base_url()
 
     @property
-    def _table_to_insert_into(self) -> str:
-        return 'forecast'
+    def _table_to_insert_into(self) -> List[str]:
+        return ['forecast', 'forecast_week']
 
     @property
     def _select_from_database(self) -> ResultProxy:
@@ -39,27 +41,33 @@ class ForecastScraper(Scraper):
 
         # I am calculating the aggregate data here because it will be requested often
         # So I don't have to do an expensive query every time somebody requests the data
+        # TODO: split parser from scraper
+        # TODO: save the raw request
         snow_week = rain_week = 0
         for day in req['Days']:
             snow_week += day['snow_total_mm']
             rain_week += day['rain_total_mm']
 
-        for day_number, day in enumerate(req['Days'], start=0):
-            date_weatherunlocked = datetime.strptime(day['date'], "%d/%m/%Y")
+        record_week = {'resort_id': self.current_id,
+                       'date_request': datetime.now(),
+                       'date': datetime.strptime(req['Days'][0]['date'], "%d/%m/%Y"),
+                       'rain_week_mm': rain_week,
+                       'snow_week_mm': snow_week}
 
-            record = {'date_request': datetime.now(),
-                      'date': date_weatherunlocked,
+        self.results[1].append(record_week)
+
+        for day_number, day in enumerate(req['Days'], start=0):
+            record = {'resort_id': self.current_id,
+                      'date_request': datetime.now(),
+                      'date': datetime.strptime(day['date'], "%d/%m/%Y"),
                       'timepoint': day_number,
                       'temperature_max_c': day['temp_max_c'],
                       'temperature_min_c': day['temp_min_c'],
                       'rain_total_mm': day['rain_total_mm'],
-                      'rain_week_mm': rain_week,
                       'snow_total_mm': day['snow_total_mm'],
-                      'snow_week_mm': snow_week,
                       'prob_precip_pct': day['prob_precip_pct'],
                       'wind_speed_max_kmh': day['windspd_max_kmh'],
                       'windgst_max_kmh': day['windgst_max_kmh'],
-                      'resort_id': self.current_id,
                       }
 
-            self.results.append(record)
+            self.results[0].append(record)
