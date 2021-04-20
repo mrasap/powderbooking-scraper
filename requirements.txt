@@ -10,7 +10,7 @@ plac==1.0.0
 pluggy==0.12.0
 powderbooking==0.4.2
 psycopg2-binary==2.8.2
-py==1.8.0
+py==1.10.0
 pyparsing==2.4.1.1
 pytest==5.0.1
 requests==2.22.0
